@@ -1,0 +1,248 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Calculadora de Trimalla</title>
+  <style>
+    * {
+      box-sizing: border-box;
+    }
+
+    body {
+      margin: 0;
+      font-family: 'Segoe UI', sans-serif;
+      background-color: #f0f2f5;
+      color: #333;
+    }
+
+    .container {
+      max-width: 95%;
+      width: 480px;
+      margin: 20px auto;
+      background-color: #fff;
+      padding: 20px;
+      border-radius: 12px;
+      box-shadow: 0 4px 10px rgba(0, 0, 0, 0.1);
+    }
+
+    h2, h3 {
+      text-align: center;
+      margin-bottom: 20px;
+      color: #1a237e;
+    }
+
+    label {
+      display: block;
+      margin-top: 15px;
+      font-weight: 600;
+    }
+
+    input[type="number"] {
+      width: 100%;
+      padding: 10px;
+      margin-top: 5px;
+      border: 1px solid #ccc;
+      border-radius: 6px;
+      font-size: 16px;
+    }
+
+    button {
+      width: 100%;
+      margin-top: 25px;
+      padding: 12px;
+      background-color: #1a237e;
+      color: #fff;
+      font-size: 16px;
+      border: none;
+      border-radius: 6px;
+      cursor: pointer;
+    }
+
+    button:hover {
+      background-color: #3949ab;
+    }
+
+    .checkbox-container {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 10px;
+      margin-top: 20px;
+      justify-content: space-between;
+    }
+
+    .checkbox-item {
+      flex: 1 1 45%;
+      display: flex;
+      align-items: center;
+      gap: 6px;
+    }
+
+    #resultados {
+      list-style: none;
+      padding: 0;
+      margin-top: 15px;
+    }
+
+    #resultados li {
+      padding: 6px 0;
+      border-bottom: 1px solid #ddd;
+    }
+
+    canvas {
+      display: block;
+      width: 100%;
+      height: auto;
+      max-width: 400px;
+      margin: 20px auto 0;
+      background: #fff;
+      border: 2px solid #1a237e;
+      border-radius: 8px;
+    }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <h2>Calculadora de Trimalla</h2>
+
+    <label for="num1">Ingrese el primer número:</label>
+    <input type="number" id="num1" min="1" />
+
+    <label for="num2">Ingrese el segundo número:</label>
+    <input type="number" id="num2" min="1" />
+
+    <button onclick="calcularTrimalla()">Calcular</button>
+
+    <div class="checkbox-container">
+      <div class="checkbox-item">
+        <input type="checkbox" id="diagonales" onchange="calcularTrimalla()" />
+        <label for="diagonales">Diagonales</label>
+      </div>
+      <div class="checkbox-item">
+        <input type="checkbox" id="tubosArriba" checked onchange="calcularTrimalla()" />
+        <label for="tubosArriba">Tubos arriba</label>
+      </div>
+      <div class="checkbox-item">
+        <input type="checkbox" id="tubosAbajo" checked onchange="calcularTrimalla()" />
+        <label for="tubosAbajo">Tubos abajo</label>
+      </div>
+      <div class="checkbox-item">
+        <input type="checkbox" id="tornillos" checked onchange="calcularTrimalla()" />
+        <label for="tornillos">Tornillos</label>
+      </div>
+    </div>
+
+    <h3>Resultados</h3>
+    <ul id="resultados"></ul>
+
+    <h3>Dibujo de la Trimalla</h3>
+    <canvas id="canvas" width="400" height="400"></canvas>
+  </div>
+
+  <script>
+    function calcularTrimalla() {
+      let num1 = parseInt(document.getElementById("num1").value);
+      let num2 = parseInt(document.getElementById("num2").value);
+      let diagonales = document.getElementById("diagonales").checked;
+      let tubosArriba = document.getElementById("tubosArriba").checked;
+      let tubosAbajo = document.getElementById("tubosAbajo").checked;
+      let tornillos = document.getElementById("tornillos").checked;
+
+      if (isNaN(num1) || isNaN(num2) || num1 < 1 || num2 < 1) {
+        alert("Por favor, ingrese números válidos mayores a 0.");
+        return;
+      }
+
+      let tubos = (num1 * num2) * 4;
+      let cantidadTornillos = (num1 * num2) + ((num1 + 1) * (num2 + 1));
+      let area = (num1 * num2) + " metros cuadrados";
+
+      let resultados = document.getElementById("resultados");
+      resultados.innerHTML = `
+        <li><strong>Tubos Z:</strong> ${tubos}</li>
+        <li><strong>Tubos I:</strong> ${tubos}</li>
+        <li><strong>Cantidad de tornillos:</strong> ${cantidadTornillos}</li>
+        <li><strong>Área a cubrir:</strong> ${area}</li>
+      `;
+
+      let filasSecundarias = Math.max(1, num1 - 1);
+      let columnasSecundarias = Math.max(1, num2 - 1);
+
+      dibujarTrimalla(num1, num2, filasSecundarias, columnasSecundarias, diagonales, tubosArriba, tubosAbajo, tornillos);
+    }
+
+    function dibujarTrimalla(filas, columnas, filasSec, columnasSec, diagonales, tubosArriba, tubosAbajo, tornillos) {
+      let canvas = document.getElementById("canvas");
+      let ctx = canvas.getContext("2d");
+      ctx.clearRect(0, 0, canvas.width, canvas.height);
+
+      let margen = 20;
+      let tamañoCelda = Math.min((canvas.width - margen * 2) / columnas, (canvas.height - margen * 2) / filas);
+
+      let xOffset = (canvas.width - tamañoCelda * columnas) / 2;
+      let yOffset = (canvas.height - tamañoCelda * filas) / 2;
+      let xOffsetSec = (canvas.width - tamañoCelda * columnasSec) / 2;
+      let yOffsetSec = (canvas.height - tamañoCelda * filasSec) / 2;
+
+      if (diagonales) {
+        ctx.strokeStyle = "rgba(255, 0, 0, 0.6)";
+        ctx.lineWidth = 2;
+        for (let i = 0; i < filas; i++) {
+          for (let j = 0; j < columnas; j++) {
+            let x = xOffset + j * tamañoCelda;
+            let y = yOffset + i * tamañoCelda;
+            ctx.beginPath();
+            ctx.moveTo(x, y);
+            ctx.lineTo(x + tamañoCelda, y + tamañoCelda);
+            ctx.moveTo(x + tamañoCelda, y);
+            ctx.lineTo(x, y + tamañoCelda);
+            ctx.stroke();
+          }
+        }
+      }
+
+      if (tubosAbajo) {
+        ctx.strokeStyle = "rgba(0, 0, 255, 0.6)";
+        ctx.lineWidth = 2;
+        for (let i = 0; i < filasSec; i++) {
+          for (let j = 0; j < columnasSec; j++) {
+            ctx.strokeRect(xOffsetSec + j * tamañoCelda, yOffsetSec + i * tamañoCelda, tamañoCelda, tamañoCelda);
+          }
+        }
+      }
+
+      if (tubosArriba) {
+        ctx.strokeStyle = "#000";
+        ctx.lineWidth = 3;
+        for (let i = 0; i < filas; i++) {
+          for (let j = 0; j < columnas; j++) {
+            let x = xOffset + j * tamañoCelda;
+            let y = yOffset + i * tamañoCelda;
+            ctx.strokeRect(x, y, tamañoCelda, tamañoCelda);
+          }
+        }
+      }
+
+      if (tornillos) {
+        ctx.fillStyle = "green";
+        let radio = tamañoCelda * 0.15;
+
+        function dibujarTornillos(filas, columnas, xOffset, yOffset) {
+          for (let i = 0; i <= filas; i++) {
+            for (let j = 0; j <= columnas; j++) {
+              let cx = xOffset + j * tamañoCelda;
+              let cy = yOffset + i * tamañoCelda;
+              ctx.beginPath();
+              ctx.arc(cx, cy, radio, 0, Math.PI * 2);
+              ctx.fill();
+            }
+          }
+        }
+
+        dibujarTornillos(filas, columnas, xOffset, yOffset);
+        dibujarTornillos(filasSec, columnasSec, xOffsetSec, yOffsetSec);
+      }
+    }
+  </script>
+</body>
+</html>
