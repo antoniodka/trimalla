@@ -1,0 +1,2 @@
+# trimalla
+calcular trimalla
